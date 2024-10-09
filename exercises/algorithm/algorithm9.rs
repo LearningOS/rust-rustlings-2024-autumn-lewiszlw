@@ -1,8 +1,7 @@
 /*
-	heap
-	This question requires you to implement a binary heap function
+    heap
+    This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -23,9 +22,13 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: vec![],
             comparator,
         }
+    }
+
+    pub fn items(&self) -> &Vec<T> {
+        &self.items
     }
 
     pub fn len(&self) -> usize {
@@ -38,10 +41,45 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.items.push(value);
+        self.count += 1;
+        self.bubble_up(self.len() - 1);
+    }
+
+    fn bubble_up(&mut self, idx: usize) {
+        if idx > 0 {
+            let parent = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[parent]) {
+                self.items.swap(idx, parent);
+                self.bubble_up(parent);
+            }
+        }
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        if self.is_empty() {
+            return None;
+        }
+        let top = {
+            let last = self.len() - 1;
+            self.items.swap(0, last);
+            self.items.pop()
+        };
+        self.count -= 1;
+        self.bubble_down(0);
+        top
+    }
+
+    fn bubble_down(&mut self, idx: usize) {
+        let minmax_idx = self.minmax_child_idx(idx);
+        if minmax_idx != idx {
+            self.items.swap(idx, minmax_idx);
+            self.bubble_down(minmax_idx);
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
-        idx / 2
+        (idx - 1) / 2
     }
 
     fn children_present(&self, idx: usize) -> bool {
@@ -49,16 +87,28 @@ where
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
-        idx * 2
+        idx * 2 + 1
     }
 
     fn right_child_idx(&self, idx: usize) -> usize {
         self.left_child_idx(idx) + 1
     }
 
-    fn smallest_child_idx(&self, idx: usize) -> usize {
+    fn minmax_child_idx(&self, idx: usize) -> usize {
         //TODO
-		0
+        let left_child = self.left_child_idx(idx);
+        let right_child = self.right_child_idx(idx);
+
+        let mut minmax_idx = idx;
+        let len = self.len();
+        if left_child < len && (self.comparator)(&self.items[left_child], &self.items[minmax_idx]) {
+            minmax_idx = left_child;
+        }
+        if right_child < len && (self.comparator)(&self.items[right_child], &self.items[minmax_idx])
+        {
+            minmax_idx = right_child;
+        }
+        minmax_idx
     }
 }
 
@@ -85,7 +135,7 @@ where
 
     fn next(&mut self) -> Option<T> {
         //TODO
-		None
+        self.pop()
     }
 }
 
@@ -127,6 +177,7 @@ mod tests {
         let mut heap = MinHeap::new();
         heap.add(4);
         heap.add(2);
+        println!("{:?}", heap.items());
         heap.add(9);
         heap.add(11);
         assert_eq!(heap.len(), 4);
